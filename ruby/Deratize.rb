@@ -1,5 +1,13 @@
 #don't profile too early!!!!!!!!!!!!!!!
 require 'set'
+
+class Array
+	def row() self[0] end
+	def row=(value) self[0] = value end
+	def col() self[1] end
+	def col=(value) self[1] = value end
+end
+
 class Warehouse
 	def initialize(path)
 		fd =File .new(path, "r")
@@ -18,13 +26,68 @@ class Warehouse
 				@mouse << pos if val == "r"
 			end
 		end
+		
+		@template = Set.new
+		@d.downto(0) do |dis|
+			for c in (0..dis)
+				r = dis - c
+				@template << [r,c]
+				@template << [c,-r]
+				@template << [-r,-c]
+				@template << [-c,r]
+			end
+		end
 	end
+	
+	def matrix_at(pos)
+		@matrix[pos.row][pos.col]
+	end
+	
+	#return shortest path(as Array) from s to a. return [s] if shortest way is no exit
+	def AStar(s, e)
+		return [s,e]
+	end
+	
+	#put a bomb explosion on position pos and regardless of wall. return explosion range as a set
+	def exposion_range_without_wall(pos)
+		range = Set.new
+		@template.each do |orig_pos|
+			trans_pos = Array.new(orig_pos)
+			trans_pos.row += pos.row
+			trans_pos.col += pos.col
+			range << trans_pos
+		end
+		return range
+	end
+	
+	#put a bomb explosion on position pos. return explosion range as a set
+	def explosion_range(bomb_pos)
+		candidate = exposion_range_without_wall(bomb_pos)
+		elect = Set.new
+		
+		loop do
+			break if candidate.empty?
+			s, e = bomb_pos, candidate.first
+			
+			path = AStar(s, e)
+			
+			path.each_index do |step|
+				pos = path[step]
+				candidate.delete(step)
+				elect << pos if index <= @d   # bomb on bom_pos can reach pos
+			end
+		end
+		return elect
+	end
+	
+	
 	attr_accessor :n
 	attr_accessor :m
 	attr_accessor :d
 	attr_accessor :matrix
 	attr_accessor :not_wall
 	attr_accessor :mouse
+	attr_accessor :template
 end
 
 class Node
@@ -38,10 +101,7 @@ class Node
 	attr_accessor :d
 end
 	
-class Array
-	def row() self[0] end
-	def col() self[1] end
-end
+
 
 =begin
 	A* algorithm. sp is start position. ep_set is a set of end positions. wh 
@@ -69,13 +129,10 @@ def AStar(sp, ep_set, wh)
 		
 		# a new close node
 		close_list[key] = node
-		if key == [1,5]
-			break
+		if ep_set.delete?(key)
+			reach_set << key if node.g <= wh.d # add if reachable
+			break if ep_set.empty? # break if find all the path to end position
 		end
-		#if ep_set.delete?(key)
-		#	reach_set << key if node.g <= wh.d # add if reachable
-		#	break if ep_set.empty? # break if find all the path to end position
-		#end
 		
 		r, c = key
 		[[0,1],[0,-1],[1,0],[-1,0]].each do |dr,dc|
@@ -110,111 +167,16 @@ def AStar(sp, ep_set, wh)
 	return reach_set
 end
 
+
 def main
 	wh = Warehouse .new("../input2.txt")
 	
-	bomb_seq = []
+	all = []
 	
-	for bomb_pos in wh.not_wall
-		ep_set = Set.new(wh.mouse)
-		bomb_seq << [bomb_pos , AStar(bomb_pos, ep_set, wh)]
+	for mice in wh.mouse
+		all << wh.explosion_range(mice)
 	end
 	
-	find = false
-	for i in (0...bomb_seq.length)
-		if bomb_seq[i][0] == [1,2] 
-			p bomb_seq[i][1]
-		end
-		if bomb_seq[i][0] == [5,8]
-			p bomb_seq[i][1]
-		end
-	end
-	
-	for i in (0...bomb_seq.length)
-		for j in (i+1...bomb_seq.length)
-			if bomb_seq[i][1] + bomb_seq[j][1] == wh.mouse
-				r1, c1, r2, c2 = bomb_seq[i][0].row + 1, bomb_seq[i][0].col + 1,bomb_seq[j][0].row + 1, bomb_seq[j][0].col + 1
-				print [r1, c1, r2, c2],"\n"
-				find = true
-			end
-		end
-	end
-	print -1, "\n" if not find
 end
 
 main()
-
-class Node
-	def initialize(g,h,d)
-		@g = g
-		@h = h
-		@d = d
-	end
-	attr_accessor :g
-	attr_accessor :h
-	attr_accessor :d
-end
-
-def problem83
-	matrix = File.readlines("matrix.txt").map do |line| 
-		line.chomp.split(",").map{|x| x.to_i}
-	end
-	
-	len = matrix.size
-	minval = matrix.map{|line| line.min}.min
-	maxval = matrix.map{|line| line.max}.max
-		
-	nodes = Array.new(len) do |r|
-		Array.new(len) do |c|
-			maxg = maxval * len * len
-			h = (len * 2 - r - c - 1) * minval
-			Node.new(maxg, h, nil)
-		end
-	end
-	
-	nodes[0][0].g = matrix[0][0]
-	openlist = { [0, 0] => nodes[0][0]}
-	closelist = {}
-	walkable = (0...len)
-		
-	#finding
-	until openlist.empty?
-		key, node = openlist.min {|a, b| (a[1].g + a[1].h) <=> (b[1].g + b[1].h) }
-		openlist.delete(key)
-		closelist[key] = node
-			
-		break if key == [len-1,len-1]
-			
-		#current
-		r, c = key
-		[[0,1],[0,-1],[1,0],[-1,0]].each do |dr,dc|
-			nr, nc, nkey = r+dr, c+dc, [r+dr, c+dc]
-				
-			#ingnore
-			if not walkable.include?(nr) or not walkable.include?(nc) or closelist.has_key?(nkey)
-				next
-			end
-				
-			#adjacent 
-			next_g, next_d = node.g + matrix[nr][nc], [dr, dc]
-			next_node  = nodes[nr][nc]
-				
-			#already in openlist
-			if openlist.has_key?(nkey)
-				if next_g < next_node.g
-					next_node.g = next_g
-					next_node.d = next_d
-				end
-			end
-				
-			#not in openlist
-			if not openlist.has_key?(nkey)
-				next_node.g = next_g
-				next_node.d = next_d
-				openlist[nkey] = next_node
-			end
-		end
-	end
-		
-	closelist[[len-1,len-1]].g
-end
