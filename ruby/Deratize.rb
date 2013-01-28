@@ -204,6 +204,7 @@ def main
 			end
 			r1,c1,r2,c2 = bomb1.row+1, bomb1.col+1, bomb2.row+1, bomb2.col+1
 			print [r1,c1,r2,c2], "\n" if cover
+			#print [bomb1,bomb2], "\n" if cover
 		end
 	end
 	print "-1"
