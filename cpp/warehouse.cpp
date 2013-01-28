@@ -5,6 +5,16 @@ uint qHash(const QPoint &point)
     return point.x()*10000 + point.y();
 }
 
+bool operator<(const QPoint& lhs, const QPoint& rhs)
+{
+    if (lhs.x() < rhs.x())
+        return true;
+    else if (lhs.x() == rhs.x())
+        return lhs.y() < rhs.y();
+    else
+        return false;
+}
+
 WareHouse::WareHouse(QString path)
 {
     QFile file(path);
@@ -74,13 +84,39 @@ QChar WareHouse::matrix_at( QPoint pos )
 
 QSet<QPoint> WareHouse::explosion_range( QPoint bomb_pos )
 {
-    QSet<QPoint> candidate = explosion_range_without_wall(bomb_pos);
+    QSet<QPoint> candidate = explosion_range_without_wall(bomb_pos) - this->wall;
     QSet<QPoint> elect;
     QSet<QPoint> walkable = candidate;
-    //walkable.remove()
+
+    while (true)
+    {
+        if (candidate.isEmpty())
+            break;
+
+        QPoint sp = bomb_pos, ep = *candidate.begin();
+        
+        QVector<QPoint> path = a_star(sp, ep, walkable);
+        
+        if (path.isEmpty())
+        {
+            candidate.remove(ep);
+            candidate.remove(sp);
+            elect << sp;
+            continue;
+        }
+        else
+        {
+            for (int step=0; step<path.size(); step++)
+            {
+                QPoint pos = path[step];
+                candidate.remove(pos);
+                if (step <= this->d)
+                    elect << pos;
+            }
+        }
+    }
+    
     return elect;
-      //  elect = Set.new
-        //walkable = Set.new(candidate)
 }
 
 QSet<QPoint> WareHouse::explosion_range_without_wall( QPoint bomb_pos )
@@ -93,4 +129,103 @@ QSet<QPoint> WareHouse::explosion_range_without_wall( QPoint bomb_pos )
             range<<trans_pos;
     }
     return range;
+}
+
+QVector<QPoint> WareHouse::a_star( QPoint sp, QPoint ep, QSet<QPoint> walkable)
+{
+    //use for A* alg
+    class Node{
+    public:
+        Node(int _g=0, int _h=0, QPoint _d=QPoint())
+        {
+            g=_g; h=_h; d = _d;
+        }
+        int g; int h; QPoint d;
+    };
+
+    QMap<QPoint, Node> nodes;
+    foreach (QPoint pos, walkable)
+    {
+        int g = this->n * this->m;
+        int h = abs(pos.x() - ep.x()) + abs(pos.y() - ep.y());
+        nodes[pos] = Node(g,h);
+    }
+
+    QSet<QPoint> open_list, close_list;
+    nodes[sp].g = 0;
+    open_list << sp;
+
+    while (!open_list.isEmpty())
+    {
+        //find the min item in open_list
+        QPoint key;
+        Node node = Node(this->m * this->n);
+        foreach (QPoint k, open_list)
+        {
+            int step1 = nodes[k].g + nodes[k].h;
+            int step2 = node.g + node.h;
+            if (step1 < step2)
+            {
+                key = k;
+                node = nodes[k];
+            }
+        }
+
+        open_list.remove(key);
+        close_list << key;
+
+        if (key == ep)
+            break;
+
+        //current
+        int r=key.y(), c = key.x();
+
+        QPoint dirs[4] = {QPoint(0,1),QPoint(0,-1),QPoint(1,0),QPoint(-1,0)};
+        for (int i=0; i<4; i++)
+        {
+            QPoint next_d = dirs[i];
+            int nr = r + next_d.y(), nc = c + next_d.x();
+            QPoint nkey = QPoint(nc,nr);
+            //ignore
+            if ( (!walkable.contains(nkey)) || close_list.contains(nkey) )
+                continue;
+
+            int next_g = node.g + 1;
+            Node* next_node = &nodes[nkey];
+
+            //already in openlist
+            if (open_list.contains(nkey))
+            {
+                if (next_g < next_node->g)
+                {
+                    next_node->g = next_g;
+                    next_node->d = next_d;
+                }
+            }
+            //not in openlist
+            else
+            {
+                next_node->g = next_g;
+                next_node->d = next_d;
+                open_list << nkey;
+            }
+        }
+    }
+
+    if (!close_list.contains(ep))
+        return QVector<QPoint>();
+    else{
+        QPoint pos = ep;
+        Node node = nodes[pos];
+        QVector<QPoint> ret;
+        while (true)
+        {
+            ret << pos;
+            if (pos == sp)
+                break;
+            pos -= node.d;
+            node = nodes[pos];
+        }
+        return ret;
+    }
 }

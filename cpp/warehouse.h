@@ -16,6 +16,8 @@ public:
 
     QSet<QPoint> explosion_range_without_wall(QPoint bomb_pos);
 
+    QVector<QPoint> a_star(QPoint sp, QPoint ep, QSet<QPoint> walkable);
+
 private:
     int m;
     int n;
