@@ -1,5 +1,6 @@
 #don't profile too early!!!!!!!!!!!!!!!
 require 'set'
+require "mathn"
 
 class Array
 	def row() self[0] end
@@ -18,11 +19,13 @@ class Warehouse
 		end
 		
 		@not_wall = []
+		@wall = Set.new
 		@mouse = Set.new
 		for r in (0...n)
 			for c in (0...m)
 				pos, val = [r,c], matrix[r][c]
 				@not_wall << pos if not val == "x"
+				@wall << pos if val == "x"
 				@mouse << pos if val == "r"
 			end
 		end
@@ -39,13 +42,96 @@ class Warehouse
 		end
 	end
 	
+	attr_accessor :n
+	attr_accessor :m
+	attr_accessor :d
+	attr_accessor :matrix
+	attr_accessor :not_wall
+	attr_accessor :mouse
+	attr_accessor :template
+	
 	def matrix_at(pos)
 		@matrix[pos.row][pos.col]
 	end
 	
-	#return shortest path(as Array) from s to a. return [s] if shortest way is no exit
-	def AStar(s, e)
-		return [s,e]
+	#one node for astar
+	class Node
+	def initialize(g,h,d)
+			@g = g
+			@h = h
+			@d = d
+		end
+		attr_accessor :g
+		attr_accessor :h
+		attr_accessor :d
+	end
+	
+	#return shortest path(as Array) from sp to ep. return nil if shortest way is no exit
+	def AStar(sp, ep, walkable)
+		nodes = Hash.new {|hash, key| hash[key] = nil}
+		for pos in walkable
+			h = (pos.row - ep.row).abs + (pos.col - ep.col).abs
+			g = @m * @n
+			nodes[pos] = Node .new(g, h, nil)
+		end
+		
+		nodes[sp].g = 0
+		open_list = { sp => nodes[sp] }
+		close_list = {}
+		
+		#searching
+		until open_list.empty?
+			key, node = open_list.min {|a, b| (a[1].g + a[1].h) <=> (b[1].g + b[1].h) }
+			open_list.delete(key)
+			close_list[key] = node
+			
+			break if key == ep
+			
+			#current
+			r, c = key
+			[[0,1],[0,-1],[1,0],[-1,0]].each do |dr,dc|
+				nr, nc, nkey = r+dr, c+dc, [r+dr, c+dc]
+				
+				#ingnore
+				if (not walkable.include?(nkey)) or close_list.has_key?(nkey)
+					next
+				end
+				
+				#adjacent 
+				next_g, next_d = node.g + 1, [dr, dc]
+				next_node  = nodes[nkey]
+				
+				#already in openlist
+				if open_list.has_key?(nkey)
+					if next_g < next_node.g
+						next_node.g = next_g
+						next_node.d = next_d
+					end
+				end
+				
+				#not in openlist
+				if not open_list.has_key?(nkey)
+					next_node.g = next_g
+					next_node.d = next_d
+					open_list[nkey] = next_node
+				end
+			end
+		end
+		
+		# no shortest path
+		return nil if not close_list.include?(ep)
+
+		# find shortest path
+		pos, node = Array.new(ep) , close_list[ep]
+		ret = []
+		loop do
+			ret << Array.new(pos)
+			break if pos == sp
+			pos.col -= node.d.col
+			pos.row -= node.d.row
+			node = nodes[pos]
+		end
+		return ret.reverse!
 	end
 	
 	#put a bomb explosion on position pos and regardless of wall. return explosion range as a set
@@ -55,118 +141,47 @@ class Warehouse
 			trans_pos = Array.new(orig_pos)
 			trans_pos.row += pos.row
 			trans_pos.col += pos.col
-			range << trans_pos
+			if (0...n).cover?(trans_pos.row) and (0...m).cover?(trans_pos.col)
+				range << trans_pos
+			end
 		end
 		return range
 	end
 	
 	#put a bomb explosion on position pos. return explosion range as a set
 	def explosion_range(bomb_pos)
-		candidate = exposion_range_without_wall(bomb_pos)
+		candidate = exposion_range_without_wall(bomb_pos) - @wall
 		elect = Set.new
+		walkable = Set.new(candidate)
+		
+		print candidate.length,"\n"
 		
 		loop do
 			break if candidate.empty?
 			s, e = bomb_pos, candidate.first
 			
-			path = AStar(s, e)
+			path = AStar(s, e, walkable)
 			
+			#no shortest path
+			if not path
+				candidate.delete(s)
+				candidate.delete(e)
+				elect << s
+				next
+			end
+			
+			#find shortest path
 			path.each_index do |step|
 				pos = path[step]
-				candidate.delete(step)
-				elect << pos if index <= @d   # bomb on bom_pos can reach pos
+				candidate.delete(pos)
+				elect << pos if step <= @d   # bomb on bom_pos can reach pos
 			end
+			print candidate.length,"\n"
 		end
 		return elect
 	end
 	
-	
-	attr_accessor :n
-	attr_accessor :m
-	attr_accessor :d
-	attr_accessor :matrix
-	attr_accessor :not_wall
-	attr_accessor :mouse
-	attr_accessor :template
 end
-
-class Node
-	def initialize(g,h,d)
-		@g = g
-		@h = h
-		@d = d
-	end
-	attr_accessor :g
-	attr_accessor :h
-	attr_accessor :d
-end
-	
-
-
-=begin
-	A* algorithm. sp is start position. ep_set is a set of end positions. wh 
-describes the whole warehouse.
-	return a set of positions those start position can reach by not larger than wh.d steps.
-=end
-def AStar(sp, ep_set, wh)
-	nodes = Array.new(wh.n) do |r|
-		Array.new(wh.m) do |c|
-			h = ([r, wh.n-r].max - 1) * ([c, wh.m-c].max - 1) - 1
-			Node.new(wh.m * wh.n, h, nil)
-		end
-	end
-	
-	nodes[sp.row][sp.col].g = 0
-	open_list = { sp => nodes[sp.row][sp.col] }
-	close_list = {}
-	
-	#reachable positions
-	reach_set = Set.new
-	
-	until open_list.empty?
-		key, node = open_list.min {|a, b| (a[1].g + a[1].h) <=> (b[1].g + b[1].h) }
-		open_list.delete(key)
-		
-		# a new close node
-		close_list[key] = node
-		if ep_set.delete?(key)
-			reach_set << key if node.g <= wh.d # add if reachable
-			break if ep_set.empty? # break if find all the path to end position
-		end
-		
-		r, c = key
-		[[0,1],[0,-1],[1,0],[-1,0]].each do |dr,dc|
-			nr, nc, nkey = r+dr, c+dc, [r+dr, c+dc]
-			
-			#ingnore if nkey is wall or nkey is already in closelist
-			if wh.matrix[nr][nc] == "x" or close_list.has_key?(nkey)
-				next
-			end
-			
-			#adjacent node
-			next_g, next_d = node.g + 1, [dr, dc]
-			next_node  = nodes[nr][nc]
-			
-			#already in openlist
-			if open_list.has_key?(nkey)
-				if next_g < next_node.g
-					next_node.g = next_g
-					next_node.d = next_d
-				end
-			end
-			
-			#not in openlist
-			if not open_list.has_key?(nkey)
-				next_node.g = next_g
-				next_node.d = next_d
-				open_list[nkey] = next_node
-			end
-		end
-	end
-	
-	return reach_set
-end
-
 
 def main
 	wh = Warehouse .new("../input2.txt")
@@ -177,6 +192,12 @@ def main
 		all << wh.explosion_range(mice)
 	end
 	
+#	all_index = (0...all.length)
+	
+	#for i in (0...all.length)
+	#	sub
+#		for j in (i+1...all.length)
+#	end
 end
 
 main()

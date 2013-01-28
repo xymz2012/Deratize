@@ -3,8 +3,8 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{0ec8c571-3158-48ff-b02e-3bb8b28fef8f}</ProjectGuid>
-    <RubyInterpreter>D:\SDK\Ruby192\bin\ruby.exe</RubyInterpreter>
-    <RubyType>Ruby 1.9.2</RubyType>
+    <RubyInterpreter>D:\SDK\Ruby193\bin\ruby.exe</RubyInterpreter>
+    <RubyType>Ruby 1.9.3</RubyType>
     <RailsProject>False</RailsProject>
     <UseMainFile>False</UseMainFile>
   </PropertyGroup>
