@@ -182,7 +182,7 @@ class Warehouse
 end
 
 def main
-	wh = Warehouse .new("../input3.txt")
+	wh = Warehouse .new("../input2.txt")
 	
 	all = []
 	
@@ -202,7 +202,8 @@ def main
 			ms_on_bomb2.each do |mouse|
 				cover = false if not mouse.include?(bomb2)
 			end
-			print [bomb1,bomb2], "\n" if cover
+			r1,c1,r2,c2 = bomb1.row+1, bomb1.col+1, bomb2.row+1, bomb2.col+1
+			print [r1,c1,r2,c2], "\n" if cover
 		end
 	end
 	print "-1"
