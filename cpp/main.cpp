@@ -1,9 +1,9 @@
-
 #include <QtCore/QCoreApplication>
+#include "warehouse.h"
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
+    WareHouse wh("../input2.txt");
 
-    return a.exec();
+    wh.explosion_range(QPoint(3,3));
 }

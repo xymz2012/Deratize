@@ -2,6 +2,7 @@
 require 'set'
 require "mathn"
 
+#add col and row attribute for Array
 class Array
 	def row() self[0] end
 	def row=(value) self[0] = value end
@@ -42,22 +43,13 @@ class Warehouse
 		end
 	end
 	
-	attr_accessor :n
-	attr_accessor :m
-	attr_accessor :d
-	attr_accessor :matrix
-	attr_accessor :not_wall
-	attr_accessor :wall
-	attr_accessor :mouse
-	attr_accessor :template
-	
 	def matrix_at(pos)
 		@matrix[pos.row][pos.col]
 	end
 	
 	#one node for astar
 	class Node
-	def initialize(g,h,d)
+		def initialize(g,h,d)
 			@g = g
 			@h = h
 			@d = d
@@ -66,7 +58,6 @@ class Warehouse
 		attr_accessor :h
 		attr_accessor :d
 	end
-	
 	#return shortest path(as Array) from sp to ep. return nil if shortest way is no exit
 	def AStar(sp, ep, walkable)
 		nodes = Hash.new {|hash, key| hash[key] = nil}
@@ -179,6 +170,14 @@ class Warehouse
 		return elect
 	end
 	
+	attr_accessor :n
+	attr_accessor :m
+	attr_accessor :d
+	attr_accessor :matrix
+	attr_accessor :not_wall
+	attr_accessor :wall
+	attr_accessor :mouse
+	attr_accessor :template
 end
 
 def main
