@@ -47,6 +47,7 @@ class Warehouse
 	attr_accessor :d
 	attr_accessor :matrix
 	attr_accessor :not_wall
+	attr_accessor :wall
 	attr_accessor :mouse
 	attr_accessor :template
 	
@@ -154,8 +155,6 @@ class Warehouse
 		elect = Set.new
 		walkable = Set.new(candidate)
 		
-		print candidate.length,"\n"
-		
 		loop do
 			break if candidate.empty?
 			s, e = bomb_pos, candidate.first
@@ -176,7 +175,6 @@ class Warehouse
 				candidate.delete(pos)
 				elect << pos if step <= @d   # bomb on bom_pos can reach pos
 			end
-			print candidate.length,"\n"
 		end
 		return elect
 	end
@@ -184,7 +182,7 @@ class Warehouse
 end
 
 def main
-	wh = Warehouse .new("../input2.txt")
+	wh = Warehouse .new("../input3.txt")
 	
 	all = []
 	
@@ -192,12 +190,22 @@ def main
 		all << wh.explosion_range(mice)
 	end
 	
-#	all_index = (0...all.length)
-	
-	#for i in (0...all.length)
-	#	sub
-#		for j in (i+1...all.length)
-#	end
+	all_index = (0...all.length)
+
+	for i in (0...wh.not_wall.length)
+		bomb1 = wh.not_wall[i]
+		ms_on_bomb1 = all.select{|mouse| mouse.include?(bomb1)}
+		ms_on_bomb2 = all.select{|mouse| not mouse.include?(bomb1)}
+		for j in (i+1...wh.not_wall.size)
+			cover = true
+			bomb2 = wh.not_wall[j]
+			ms_on_bomb2.each do |mouse|
+				cover = false if not mouse.include?(bomb2)
+			end
+			print [bomb1,bomb2], "\n" if cover
+		end
+	end
+	print "-1"
 end
 
 main()
