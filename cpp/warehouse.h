@@ -21,7 +21,7 @@ public:
     //matrix[r][c],(r,c)此格子的状态
     QVector<QString> matrix;
     //所有非墙壁格子的集合
-    //QVector<QPoint> not_wall;
+    QVector<QPoint> not_wall;
     //所有墙壁格子的集合
     QSet<QPoint> wall;
     //所有老鼠格子的集合
