@@ -1,20 +1,5 @@
 #include "warehouse.h"
 
-uint qHash(const QPoint &point)  
-{
-    return point.x()*10000 + point.y();
-}
-
-bool operator<(const QPoint& lhs, const QPoint& rhs)
-{
-    if (lhs.x() < rhs.x())
-        return true;
-    else if (lhs.x() == rhs.x())
-        return lhs.y() < rhs.y();
-    else
-        return false;
-}
-
 WareHouse::WareHouse(QString path)
 {
     QFile file(path);
@@ -77,12 +62,7 @@ WareHouse::~WareHouse()
 
 }
 
-QChar WareHouse::matrix_at( QPoint pos )
-{
-    return this->matrix[pos.y()][pos.x()];
-}
-
-QSet<QPoint> WareHouse::explosion_range( QPoint bomb_pos )
+QSet<QPoint> WareHouse::explosion_range( QPoint bomb_pos ) const
 {
     QSet<QPoint> candidate = explosion_range_without_wall(bomb_pos) - this->wall;
     QSet<QPoint> elect;
@@ -119,7 +99,7 @@ QSet<QPoint> WareHouse::explosion_range( QPoint bomb_pos )
     return elect;
 }
 
-QSet<QPoint> WareHouse::explosion_range_without_wall( QPoint bomb_pos )
+QSet<QPoint> WareHouse::explosion_range_without_wall( QPoint bomb_pos ) const
 {
     QSet<QPoint> range;
     foreach (QPoint pos , this->candidate_template)
@@ -131,39 +111,39 @@ QSet<QPoint> WareHouse::explosion_range_without_wall( QPoint bomb_pos )
     return range;
 }
 
-QVector<QPoint> WareHouse::a_star( QPoint sp, QPoint ep, QSet<QPoint> walkable)
-{
-    //use for A* alg
-    class Node{
-    public:
-        Node(int _g=0, int _h=0, QPoint _d=QPoint())
-        {
-            g=_g; h=_h; d = _d;
-        }
-        int g; int h; QPoint d;
-    };
+class ANode{
+public:
+    ANode(int _g=0, int _h=0, QPoint _d=QPoint())
+    {
+        g=_g; h=_h; d = _d;
+    }
+    int g; int h; QPoint d;
+};
 
+QVector<QPoint> WareHouse::a_star( QPoint sp, QPoint ep, QSet<QPoint> walkable) const 
+{
     //trick: exchange sp and ep
     QPoint temp = sp;
     sp = ep; ep = temp;
 
-    QMap<QPoint, Node> nodes;
+    //init g and h
+    QMap<QPoint, ANode> nodes;
     foreach (QPoint pos, walkable)
     {
         int g = this->n * this->m;
         int h = abs(pos.x() - ep.x()) + abs(pos.y() - ep.y());
-        nodes[pos] = Node(g,h);
+        nodes[pos] = ANode(g,h);
     }
 
+    //searching
     QSet<QPoint> open_list, close_list;
     nodes[sp].g = 0;
     open_list << sp;
-
     while (!open_list.isEmpty())
     {
-        //find the min item in open_list
+        //find the min item(key, node) in open_list
         QPoint key;
-        Node node = Node(this->m * this->n);
+        ANode node = ANode(this->m * this->n);
         foreach (QPoint k, open_list)
         {
             int step1 = nodes[k].g + nodes[k].h;
@@ -175,27 +155,26 @@ QVector<QPoint> WareHouse::a_star( QPoint sp, QPoint ep, QSet<QPoint> walkable)
             }
         }
 
+        //handle (key,node)
+        int r=key.y(), c = key.x();
         open_list.remove(key);
         close_list << key;
-
         if (key == ep)
             break;
 
-        //current
-        int r=key.y(), c = key.x();
-
+        //neighbor
         QPoint dirs[4] = {QPoint(0,1),QPoint(0,-1),QPoint(1,0),QPoint(-1,0)};
         for (int i=0; i<4; i++)
         {
             QPoint next_d = dirs[i];
             int nr = r + next_d.y(), nc = c + next_d.x();
             QPoint nkey = QPoint(nc,nr);
+            
             //ignore
             if ( (!walkable.contains(nkey)) || close_list.contains(nkey) )
                 continue;
-
             int next_g = node.g + 1;
-            Node* next_node = &nodes[nkey];
+            ANode* next_node = &nodes[nkey];
 
             //already in openlist
             if (open_list.contains(nkey))
@@ -216,11 +195,12 @@ QVector<QPoint> WareHouse::a_star( QPoint sp, QPoint ep, QSet<QPoint> walkable)
         }
     }
 
+    //return path from close list
     if (!close_list.contains(ep))
         return QVector<QPoint>();
     else{
         QPoint pos = ep;
-        Node node = nodes[pos];
+        ANode node = nodes[pos];
         QVector<QPoint> ret;
         while (true)
         {
@@ -232,4 +212,19 @@ QVector<QPoint> WareHouse::a_star( QPoint sp, QPoint ep, QSet<QPoint> walkable)
         }
         return ret;
     }
+}
+
+uint qHash(const QPoint &point)  
+{
+    return point.x()*10000 + point.y();
+}
+
+bool operator<(const QPoint& lhs, const QPoint& rhs)
+{
+    if (lhs.x() < rhs.x())
+        return true;
+    else if (lhs.x() == rhs.x())
+        return lhs.y() < rhs.y();
+    else
+        return false;
 }
