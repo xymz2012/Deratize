@@ -24,23 +24,23 @@ void deratize(const WareHouse& wh)
     }
 
     //寻找能消灭指定mice的炸弹的位置
-    QVector<QSet<QPoint>> mouse;
+    QVector<QSet<QPoint>> all;
     foreach (QPoint mice, wh.mouse)
     {
         QSet<QPoint> temp = wh.explosion_range(mice);
-        mouse << temp; 
+        all << temp; 
     }
 
     //bomb1 可以炸到 mouse[0]的老鼠
-    foreach (QPoint bomb1, mouse[0])
+    foreach (QPoint bomb1, all[0])
     {
         //剔除mouse中,bomb1能消灭的老鼠.
         //得到的mouse_by_bomb2为bomb2需要消灭的老鼠
         QVector<QSet<QPoint>*> mouse_by_bomb2;
-        for (int n=1; n<mouse.size(); n++)
+        for (int n=1; n<all.size(); n++)
         {
-            if (!mouse[n].contains(bomb1))
-                mouse_by_bomb2.append(&mouse[n]);
+            if (!all[n].contains(bomb1))
+                mouse_by_bomb2.append(&all[n]);
         }
 
         //bomb1 可以消灭所有老鼠

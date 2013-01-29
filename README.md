@@ -31,28 +31,32 @@
 	
 *最后实现获取2个炸弹放置的位置
 	算法说明:
-	1, 令all为一个空集合
+	1, all = [], 其中的每一个值表示一个炸弹的集合(这个炸弹集,都能炸到同一个老鼠),
 	2, for mice in mouse 遍历房子里的所有老鼠
 	*	bombs = explosion_range(mice)  获取能炸到mice的所有炸弹的集合bombs.
 		(利用了爆炸的路径正向,逆向等效的原理)
 	*	向all中添加bombs
 	end
-	3, 令bomb_list为all中所有的炸弹
-	4, for bomb1,bomb2 in every_pair of bomb_list
-	*	ms_on_bomb1, ms_on_bomb2 = [],[] 2个空集合
+	3, for bomb1 in pop(all) 从all中取出一个炸弹集合,并且遍历其中所有的炸弹
+	*	mouse_by_bomb1, mouse_by_bomb2 = [],[]
 	*	for bombs in all
-	*	*	ms_on_bomb1 << bombs 如果bombs包含bomb1
-	*	*	ms_on_bomb2 << bombs 如果bombs没有包含bomb1
+	*	*	mouse_by_bomb1 << bombs 如果bombs包含bomb1
+	*	*	mouse_by_bomb2 << bombs 如果bombs没有包含bomb1
 	*	end
-	*
-	*	valid = true
-	*
-	*	for bombs in ms_on_bomb2 
-	*	*	valid = false 如果 bombs未包含bomb2
-	*	end
-	*
-	*	print bomb1,bomb2 并 goto 结束; 如果 valid为true
+	*	求出mouse_by_bomb2中所有炸弹集的交集valid_bomb2
+	*	如果valid_bomb2不为空, 则 print bomb1, pop(valid_bomb2) 并 goto 结束
 	end
-	5, print -1
-	6, 结束
+	4, print -1
+	5, 结束
 	
+4, 算法改进:
+	函数explosion_range可以不用Astar来实现, 用类似膨胀的算法 应该能获取更快的速度.
+	
+5, 编译以及使用
+	编译:
+		cd cpp
+		qmake Deratize.pro
+		make
+	使用:
+		Deratize input.txt
+		
