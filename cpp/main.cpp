@@ -83,9 +83,7 @@ int main(int argc, char *argv[])
     deratize(wh);
 
     int elapsed = time.elapsed();
-    qDebug()<<elapsed<<"ms";
+    //qDebug()<<elapsed<<"ms";
 
-    QCoreApplication app(argc, argv);
-    app.exec();
     return 0;
 }
