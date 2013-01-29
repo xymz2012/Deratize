@@ -52,11 +52,14 @@
 4, 算法改进:
 	函数explosion_range可以不用Astar来实现, 用类似膨胀的算法 应该能获取更快的速度.
 	
-5, 编译以及使用
+5, 编译以及使用,cpp/bin目录下,有一已经编译好的
 	编译:
 		cd cpp
 		qmake Deratize.pro
 		make
 	使用:
 		Deratize input.txt
+
+6, 生成测试数据
+	ruby -I. gen_inputdata.rb
 		
