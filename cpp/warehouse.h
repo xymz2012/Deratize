@@ -2,7 +2,7 @@
 #define WAREHOUSE_H
 
 #include <QtCore>
-#include <QVector2D>
+#include <QVector>
 
 class WareHouse 
 {
@@ -18,15 +18,17 @@ public:
 
     QVector<QPoint> a_star(QPoint sp, QPoint ep, QSet<QPoint> walkable);
 
-private:
     int m;
     int n;
     int d;
     QVector<QString> matrix;
-    QSet<QPoint> not_wall;
+    QVector<QPoint> not_wall;
     QSet<QPoint> wall;
     QSet<QPoint> mouse;
     QSet<QPoint> candidate_template;
 };
+
+bool operator<(const QPoint& lhs, const QPoint& rhs);
+uint qHash(const QPoint &point);
 
 #endif // WAREHOUSE_H

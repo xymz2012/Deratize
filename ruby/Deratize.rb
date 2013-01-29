@@ -188,8 +188,6 @@ def main
 	for mice in wh.mouse
 		all << wh.explosion_range(mice)
 	end
-	
-	all_index = (0...all.length)
 
 	for i in (0...wh.not_wall.length)
 		bomb1 = wh.not_wall[i]

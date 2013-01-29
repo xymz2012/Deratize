@@ -27,7 +27,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="warehouse.cpp">
+    <ClInclude Include="warehouse.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

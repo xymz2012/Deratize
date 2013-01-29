@@ -143,6 +143,10 @@ QVector<QPoint> WareHouse::a_star( QPoint sp, QPoint ep, QSet<QPoint> walkable)
         int g; int h; QPoint d;
     };
 
+    //trick: exchange sp and ep
+    QPoint temp = sp;
+    sp = ep; ep = temp;
+
     QMap<QPoint, Node> nodes;
     foreach (QPoint pos, walkable)
     {
