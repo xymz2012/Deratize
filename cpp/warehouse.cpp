@@ -4,8 +4,8 @@ WareHouse::WareHouse(QString path)
 {
     QFile file(path);
     file.open(QIODevice::ReadOnly);
-
     QTextStream in(&file);
+    Q_ASSERT(file.exists());
 
     //read header
     QString line = in.readLine();
