@@ -3,8 +3,7 @@
 
 void print_result(QPoint bomb1, QPoint bomb2)
 {
-    static int sum = 0;
-    qDebug() << sum++ << ":" << bomb1.y()+1 << bomb1.x()+1
+    qDebug() << bomb1.y()+1 << bomb1.x()+1
         << bomb2.y()+1 << bomb2.x()+1;
 }
 
