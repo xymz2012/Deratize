@@ -31,15 +31,15 @@
 	
 *最后实现获取2个炸弹放置的位置
 	算法说明:
-	1, 令all为一个空集合, 保存
+	1, 令all为一个空集合
 	2, for mice in mouse 遍历房子里的所有老鼠
 	*	bombs = explosion_range(mice)  获取能炸到mice的所有炸弹的集合bombs.
 		(利用了爆炸的路径正向,逆向等效的原理)
 	*	向all中添加bombs
 	end
-	3, 令not_wall为所有的 可以放置炸弹的格子
-	4, for bomb1,bomb2 in every_pair of not_wall
-	*	ms_on_bomb1, ms_on_bomb2 = [],[]; 2个空集合
+	3, 令bomb_list为all中所有的炸弹
+	4, for bomb1,bomb2 in every_pair of bomb_list
+	*	ms_on_bomb1, ms_on_bomb2 = [],[] 2个空集合
 	*	for bombs in all
 	*	*	ms_on_bomb1 << bombs 如果bombs包含bomb1
 	*	*	ms_on_bomb2 << bombs 如果bombs没有包含bomb1
@@ -51,7 +51,7 @@
 	*	*	valid = false 如果 bombs未包含bomb2
 	*	end
 	*
-	*	print bomb1,bomb2 并 goto 结束 如果 valid为true
+	*	print bomb1,bomb2 并 goto 结束; 如果 valid为true
 	end
 	5, print -1
 	6, 结束

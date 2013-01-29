@@ -36,8 +36,6 @@ WareHouse::WareHouse(QString path)
                 this->wall << pos;
             if (val == 'r')
                 this->mouse << pos;
-            if (val != 'x')
-                this->not_wall << pos;
         }
     }
 
